@@ -229,9 +229,6 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
 
 /* ─── 科普卡 ─── */
 .sci-card { width:100%; background:var(--white); border-radius:18px; box-shadow:var(--shadow); overflow:hidden; flex-shrink:0; }
-.sci-photo { width:100%; aspect-ratio:21/9; overflow:hidden; position:relative; background:#e0f2fe; }
-.sci-photo img { width:100%; height:100%; object-fit:cover; }
-.sci-photo-credit { position:absolute; bottom:0; right:0; background:rgba(0,0,0,.42); color:rgba(255,255,255,.8); font-size:10px; padding:3px 8px; border-radius:8px 0 0 0; }
 
 .sci-body { padding:14px 16px 16px; display:flex; flex-direction:column; gap:10px; }
 
@@ -445,10 +442,6 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
 
   <!-- 科普卡 -->
   <div class="sci-card">
-    <div class="sci-photo">
-      <img id="sciPhoto" src="" alt="">
-      <div class="sci-photo-credit" id="sciCredit"></div>
-    </div>
     <div class="sci-body">
       <div class="sci-heading">
         <img id="sciThumb" src="" alt="" class="sh-img">
@@ -559,7 +552,7 @@ const BIRDS = [
   },
   {
     id:'blackbird', nameCN:'乌鸫', nameEN:'Common Blackbird', scientific:'Turdus merula',
-    photo:'assets/photos/blackbird.jpeg', credit:'© 自摄 / 塔斯马尼亚 2025',
+    photo:'assets/photos/blackbird.jpeg', credit:'© 自摄 / 深圳',
     callDesc:'"唔—嘟嘟嘟"旋律悠扬绵长，鸟中歌唱家',
     audio:'assets/audio/blackbird.m4a',
     mnemonic:'是不是很熟悉？它可是模仿电动车报警声大师！',
@@ -990,8 +983,6 @@ function toStars(s) {
    渲染科普卡
 ═══════════════════════════════════════════ */
 function renderSciCard(bird) {
-  document.getElementById('sciPhoto').src = bird.photo;
-  document.getElementById('sciCredit').textContent = bird.credit||'';
   document.getElementById('sciThumb').src = bird.photo;
   document.getElementById('sciName').textContent = bird.nameCN;
   document.getElementById('sciNameEn').textContent = bird.nameEN+' · '+bird.scientific;
