@@ -26,14 +26,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare static files
+        run: |
+          mkdir -p _site
+          cp bird_call_game.html _site/index.html
+          cp -r assets _site/assets
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # 上传整个仓库根目录（含 bird_call_game.html 和 assets/）
-          path: '.'
+          path: '_site'
 
       - name: Deploy to GitHub Pages
         id: deployment
