@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>深圳鸟叫挑战 🐦</title>
+<style>
+/* ─────────────── 全局 ─────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green:       #2d6a4f;
+  --green-mid:   #40916c;
+  --green-light: #52b788;
+  --green-pale:  #d8f3dc;
+  --yellow:      #ffd166;
+  --orange:      #ef9a00;
+  --coral:       #e76f51;
+  --sky:         #90e0ef;
+  --sky-dark:    #0077b6;
+  --amber:       #fb8500;
+  --bg:          #f0f7f4;
+  --white:       #ffffff;
+  --text:        #1b2631;
+  --gray:        #9ca3af;
+  --shadow:      0 6px 24px rgba(0,0,0,0.10);
+  --shadow-sm:   0 2px 10px rgba(0,0,0,0.07);
+}
+body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif; background: var(--bg); color: var(--text); height: 100dvh; overflow: hidden; }
+
+/* ─────────────── 背景装饰 ─────────────── */
+.bg-deco { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.bg-deco::before { content:''; position:absolute; top:-180px; right:-180px; width:560px; height:560px; background:radial-gradient(circle,rgba(82,183,136,.13),transparent 68%); border-radius:50%; }
+.bg-deco::after  { content:''; position:absolute; bottom:-180px; left:-180px; width:480px; height:480px; background:radial-gradient(circle,rgba(144,224,239,.15),transparent 68%); border-radius:50%; }
+
+/* ─────────────── 布局 ─────────────── */
+#app { position:relative; z-index:1; max-width:520px; margin:0 auto; height:100dvh; display:flex; flex-direction:column; overflow:hidden; }
+.screen { display:none; flex-direction:column; align-items:center; gap:10px; animation:fadeIn .35s ease; flex:1; overflow-y:auto; padding:14px 16px 20px; -webkit-overflow-scrolling:touch; }
+.screen.active { display:flex; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+/* ─────────────── 通用卡片 ─────────────── */
+.card { background:var(--white); border-radius:18px; padding:16px; box-shadow:var(--shadow); width:100%; flex-shrink:0; }
+
+/* ─────────────── 通用按钮 ─────────────── */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:13px 26px; border:none; border-radius:50px; font-size:16px; font-weight:600; cursor:pointer; transition:all .18s ease; user-select:none; flex-shrink:0; }
+.btn:active { transform:scale(.95); }
+.btn-primary  { background:linear-gradient(135deg,var(--green),var(--green-light)); color:#fff; box-shadow:0 4px 14px rgba(45,106,79,.30); }
+.btn-primary:hover  { box-shadow:0 6px 18px rgba(45,106,79,.40); transform:translateY(-1px); }
+.btn-secondary { background:var(--green-pale); color:var(--green); border:2px solid rgba(82,183,136,.3); }
+.btn-secondary:hover { background:#b7e4c7; }
+.btn-danger { background:linear-gradient(135deg,var(--coral),#c1121f); color:#fff; box-shadow:0 4px 14px rgba(231,111,81,.28); }
+.btn:disabled { opacity:.45; cursor:not-allowed; transform:none!important; box-shadow:none!important; }
+.btn-full { width:100%; }
+.btn-lg   { padding:14px 34px; font-size:17px; }
+
+/* ─────────────── 进度 ─────────────── */
+.progress-bar { width:100%; height:5px; background:rgba(45,106,79,.12); border-radius:10px; overflow:hidden; flex-shrink:0; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--green),var(--green-light)); border-radius:10px; transition:width .5s ease; }
+.round-badge { font-size:13px; color:var(--green); font-weight:600; opacity:.75; align-self:flex-start; flex-shrink:0; }
+
+/* ════════════════════════════════════════
+   欢迎页
+════════════════════════════════════════ */
+#screen-welcome { justify-content:center; gap:14px; padding-top:16px; padding-bottom:24px; }
+
+/* 首页鸟类展示区 */
+.hero-scene {
+  width:100%; position:relative;
+  height:220px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+/* 中心大卡通鸟 + 话筒 */
+.hero-bird-center {
+  position:relative; z-index:3;
+  display:flex; flex-direction:row; align-items:center; gap:6px;
+  filter:drop-shadow(0 8px 24px rgba(45,106,79,.25));
+}
+.hero-bird-emoji {
+  font-size:90px; line-height:1;
+  animation:bird-sing 1.8s ease-in-out infinite;
+  display:block;
+}
+/* 话筒紧贴小鸟右侧 */
+.hero-mic {
+  font-size:42px; line-height:1;
+  animation:mic-bob 2s ease-in-out infinite;
+  display:block;
+  margin-top:-10px;
+}
+@keyframes mic-bob {
+  0%,100% { transform:translateY(0) rotate(-8deg); }
+  50%     { transform:translateY(-6px) rotate(8deg); }
+}
+@keyframes bird-sing {
+  0%,100% { transform:scale(1) rotate(-2deg); }
+  25%      { transform:scale(1.08) rotate(3deg); }
+  50%      { transform:scale(1.04) rotate(-3deg); }
+  75%      { transform:scale(1.1) rotate(2deg); }
+}
+/* 音符浮动（从小鸟左上方飘出） */
+.music-notes {
+  position:absolute; top:-20px; left:50%; margin-left:-80px;
+  display:flex; flex-direction:row; gap:4px; align-items:flex-end;
+  pointer-events:none;
+}
+.music-note {
+  font-size:36px; opacity:0;
+  animation:note-float 2.6s ease-in-out infinite;
+}
+.music-note:nth-child(1){ animation-delay:0s;   font-size:32px; }
+.music-note:nth-child(2){ animation-delay:.7s;  font-size:44px; }
+.music-note:nth-child(3){ animation-delay:1.4s; font-size:28px; }
+@keyframes note-float {
+  0%   { opacity:0; transform:translateY(0) translateX(0) scale(.6); }
+  30%  { opacity:1; }
+  100% { opacity:0; transform:translateY(-55px) translateX(10px) scale(1); }
+}
+/* 散落的鸟头像 */
+.scatter-birds {
+  position:absolute; inset:0; z-index:2; pointer-events:none;
+}
+.scatter-bird {
+  position:absolute;
+  width:100px; height:100px;
+  border-radius:50%; overflow:hidden;
+  border:3px solid var(--white);
+  box-shadow:0 3px 14px rgba(0,0,0,.15);
+  background:#e0f4ff;
+  animation:float-bob 3s ease-in-out infinite;
+}
+.scatter-bird img { width:100%; height:100%; object-fit:cover; }
+@keyframes float-bob {
+  0%,100% { transform:translateY(0); }
+  50%     { transform:translateY(-8px); }
+}
+
+.welcome-title {
+  font-size:22px; font-weight:800; text-align:center; line-height:1.3;
+  background:linear-gradient(135deg,var(--green),var(--sky-dark));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  flex-shrink:0;
+}
+.welcome-sub { font-size:14px; color:#555; text-align:center; line-height:1.6; flex-shrink:0; }
+.rules-list { list-style:none; display:flex; flex-direction:column; gap:9px; }
+.rules-list li { display:flex; align-items:flex-start; gap:10px; font-size:14px; color:#444; line-height:1.5; }
+.step-num { min-width:26px; height:26px; background:transparent; color:var(--green); border-radius:50%; font-size:18px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:0px; flex-shrink:0; }
+
+/* ════════════════════════════════════════
+   抽鸟页
+════════════════════════════════════════ */
+.bird-photo-card {
+  width:100%; border-radius:18px; overflow:hidden;
+  box-shadow:var(--shadow); position:relative; background:#e8f5e9;
+  flex-shrink:0;
+}
+.bird-photo-card img { width:100%; aspect-ratio:16/9; object-fit:cover; display:block; }
+.photo-credit {
+  position:absolute; bottom:0; right:0;
+  background:rgba(0,0,0,.42); color:rgba(255,255,255,.8);
+  font-size:10px; padding:3px 8px; border-radius:8px 0 0 0;
+}
+.bird-info-row { padding:12px 14px 14px; display:flex; flex-direction:column; gap:4px; background:var(--white); }
+.bird-name-cn { font-size:22px; font-weight:800; color:var(--green); }
+.bird-name-en { font-size:12px; color:var(--gray); font-style:italic; }
+.call-badge { display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,#ffd166,var(--orange)); color:#fff; border-radius:10px; padding:4px 10px; font-size:13px; font-weight:600; margin-top:3px; align-self:flex-start; }
+
+/* 音频播放器 */
+.audio-player { width:100%; background:linear-gradient(135deg,var(--green-pale),#b7e4c7); border-radius:16px; padding:12px 16px; flex-shrink:0; }
+.audio-title { font-size:14px; font-weight:700; color:var(--green); margin-bottom:8px; text-align:center; }
+.wave-bars { display:flex; align-items:center; justify-content:center; gap:4px; height:28px; margin-bottom:10px; }
+.wave-bar { width:5px; border-radius:3px; background:var(--green); }
+.wave-bar.playing { animation:wave-anim .55s ease-in-out infinite alternate; }
+@keyframes wave-anim { from{height:4px;opacity:.3} to{height:var(--h,26px);opacity:1} }
+.audio-btns { display:flex; gap:10px; justify-content:center; }
+.audio-note { font-size:11px; color:var(--gray); text-align:center; margin-top:6px; }
+.audio-note a { color:var(--sky-dark); }
+
+/* ════════════════════════════════════════
+   录音页
+════════════════════════════════════════ */
+.record-mini-card {
+  display:flex; align-items:center; gap:14px;
+  background:var(--white); border-radius:14px;
+  padding:10px 14px; width:100%; box-shadow:var(--shadow-sm); flex-shrink:0;
+}
+.record-mini-card img { width:48px; height:48px; border-radius:10px; object-fit:cover; flex-shrink:0; }
+.rmc-name { font-size:17px; font-weight:700; color:var(--green); }
+.rmc-call { font-size:12px; color:#666; margin-top:1px; line-height:1.5; }
+
+.record-zone { width:100%; background:#fff9f5; border:2px dashed #f4a261; border-radius:16px; padding:16px 20px; text-align:center; flex-shrink:0; }
+.mic-icon { font-size:48px; display:block; margin-bottom:8px; }
+.mic-icon.recording { animation:pulse .7s ease-in-out infinite alternate; filter:drop-shadow(0 0 12px rgba(231,111,81,.65)); }
+@keyframes pulse { from{transform:scale(1)} to{transform:scale(1.14)} }
+.record-hint { font-size:13px; color:#888; line-height:1.5; margin-bottom:10px; }
+.record-timer { font-size:28px; font-weight:700; color:var(--coral); min-height:34px; font-variant-numeric:tabular-nums; }
+.rec-bar-wrap { width:100%; height:6px; background:rgba(244,162,97,.2); border-radius:10px; overflow:hidden; margin-top:8px; }
+.rec-bar-fill { height:100%; background:linear-gradient(90deg,var(--yellow),var(--coral)); border-radius:10px; width:0%; transition:width .08s linear; }
+
+.analyzing { display:none; text-align:center; padding:16px 0; }
+.analyzing.show { display:block; }
+.spinner { width:40px; height:40px; border:4px solid var(--green-pale); border-top:4px solid var(--green); border-radius:50%; animation:spin .85s linear infinite; margin:0 auto 10px; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+.mic-err { display:none; background:#fff3f3; border:1px solid #fca5a5; border-radius:10px; padding:12px 14px; font-size:13px; color:#c0392b; line-height:1.6; width:100%; }
+.mic-err.show { display:block; }
+
+/* ════════════════════════════════════════
+   得分页
+════════════════════════════════════════ */
+.score-card {
+  width:100%; background:var(--white); border-radius:18px;
+  padding:16px; box-shadow:var(--shadow);
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  flex-shrink:0;
+}
+.score-num {
+  font-size:68px; font-weight:900; line-height:1;
+  background:linear-gradient(135deg,var(--coral),#9b0000);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.score-lbl { font-size:12px; color:var(--gray); }
+.score-stars { font-size:24px; letter-spacing:3px; }
+.comment-box {
+  width:100%; background:linear-gradient(135deg,#fff9f5,#ffeedd);
+  border-left:4px solid var(--yellow); border-radius:0 10px 10px 0;
+  padding:10px 12px; font-size:14px; line-height:1.6; color:#333;
+}
+.comment-box::before { content:'"'; font-size:24px; color:var(--yellow); line-height:0; vertical-align:-7px; margin-right:3px; }
+
+/* ─── 科普卡 ─── */
+.sci-card { width:100%; background:var(--white); border-radius:18px; box-shadow:var(--shadow); overflow:hidden; flex-shrink:0; }
+.sci-photo { width:100%; aspect-ratio:21/9; overflow:hidden; position:relative; background:#e0f2fe; }
+.sci-photo img { width:100%; height:100%; object-fit:cover; }
+.sci-photo-credit { position:absolute; bottom:0; right:0; background:rgba(0,0,0,.42); color:rgba(255,255,255,.8); font-size:10px; padding:3px 8px; border-radius:8px 0 0 0; }
+
+.sci-body { padding:14px 16px 16px; display:flex; flex-direction:column; gap:10px; }
+
+.sci-heading { display:flex; align-items:center; gap:10px; }
+.sci-heading .sh-img { width:40px; height:40px; border-radius:10px; object-fit:cover; flex-shrink:0; }
+.sci-heading .sh-t1 { font-size:18px; font-weight:800; color:var(--green); }
+.sci-heading .sh-t2 { font-size:11px; color:var(--gray); font-style:italic; margin-top:2px; }
+
+/* 口诀区 */
+.sci-mnemonic {
+  background:linear-gradient(135deg,#f0fdf4,#d1fae5);
+  border-radius:12px; padding:11px 14px;
+  display:flex; flex-direction:column; gap:3px;
+}
+.sci-mnemonic .sm-label { font-size:11px; font-weight:700; color:var(--green-mid); letter-spacing:.6px; text-transform:uppercase; }
+.sci-mnemonic .sm-val { font-size:15px; font-weight:700; color:var(--green); line-height:1.4; }
+
+/* 科普网格 */
+.sci-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
+.sci-item { background:#f8fafc; border-radius:10px; padding:10px 12px; }
+.sci-item .si-label { font-size:10px; font-weight:700; color:var(--sky-dark); letter-spacing:.6px; text-transform:uppercase; margin-bottom:3px; }
+.sci-item .si-val { font-size:12px; color:#2c3e50; line-height:1.5; }
+
+/* 全宽普通条目 */
+.sci-item.full { grid-column:1/-1; background:#f0f9ff; }
+.sci-item.full .si-label { color:var(--sky-dark); }
+.sci-item.full .si-val { font-size:12px; color:#2c3e50; line-height:1.5; }
+
+/* ★ 趣闻特别设计 ★ */
+.sci-item.fun {
+  grid-column:1/-1;
+  background:linear-gradient(135deg,#fff7ed,#ffedd5);
+  border:1.5px solid #fed7aa;
+  border-radius:12px;
+  padding:12px 14px;
+  position:relative;
+  overflow:hidden;
+}
+.sci-item.fun::before {
+  content:'✨';
+  position:absolute; right:12px; top:8px;
+  font-size:18px; opacity:.5;
+}
+.sci-item.fun .si-label {
+  font-size:12px; font-weight:800;
+  color:var(--amber); letter-spacing:.5px;
+  display:flex; align-items:center; gap:4px;
+  margin-bottom:5px;
+}
+.sci-item.fun .si-val {
+  font-size:13px; color:#7c3d00;
+  line-height:1.6; font-weight:500;
+}
+
+/* ════════════════════════════════════════
+   结算页
+════════════════════════════════════════ */
+.final-card {
+  width:100%; background:var(--white); border-radius:18px;
+  padding:18px; box-shadow:var(--shadow);
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  flex-shrink:0;
+}
+.total-score {
+  font-size:72px; font-weight:900; line-height:1;
+  background:linear-gradient(135deg,var(--green),var(--sky-dark));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.total-lbl { font-size:12px; color:var(--gray); }
+.rank-badge { background:linear-gradient(135deg,#ffd700,#ff8c00); color:#fff; border-radius:20px; padding:8px 20px; font-size:16px; font-weight:700; box-shadow:0 4px 12px rgba(255,140,0,.3); }
+.rank-comment { font-size:13px; color:#444; text-align:center; line-height:1.6; padding:0 8px; }
+
+.history-wrap { width:100%; background:var(--white); border-radius:16px; padding:14px 16px; box-shadow:var(--shadow-sm); flex-shrink:0; }
+.history-title-row { font-size:11px; font-weight:700; color:var(--gray); margin-bottom:10px; text-transform:uppercase; letter-spacing:.5px; }
+.history-items { display:flex; flex-direction:column; gap:8px; }
+.history-row { display:flex; align-items:center; gap:10px; font-size:14px; }
+.history-row img { width:34px; height:34px; border-radius:8px; object-fit:cover; flex-shrink:0; }
+.history-row .h-bird { flex:1; color:var(--green); font-weight:600; }
+.history-row .h-score { font-weight:700; min-width:40px; text-align:right; }
+.history-row .h-stars { font-size:12px; min-width:60px; text-align:right; }
+
+/* ─────────────── 彩纸 ─────────────── */
+#confetti { position:fixed; inset:0; pointer-events:none; z-index:999; }
+.cp { position:absolute; border-radius:2px; animation:cf-fall linear forwards; }
+@keyframes cf-fall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
+
+/* ─────────────── 飞鸟背景 ─────────────── */
+#flying { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.fb { position:absolute; font-size:16px; opacity:.06; animation:fly linear infinite; }
+@keyframes fly { from{transform:translateX(-60px)} to{transform:translateX(calc(100vw+60px))} }
+</style>
+</head>
+<body>
+<div class="bg-deco"></div>
+<div id="flying"></div>
+<div id="confetti"></div>
+<div id="app">
+
+<!-- ════════════════════ 欢迎 ════════════════════ -->
+<div id="screen-welcome" class="screen active">
+
+  <!-- 卡通鸟中心 + 散落鸟头像 -->
+  <div class="hero-scene" id="heroScene">
+    <!-- 散落的真实鸟头像，JS动态填充 -->
+    <div class="scatter-birds" id="scatterBirds"></div>
+    <!-- 中心大卡通鸟 + 话筒 -->
+    <div class="hero-bird-center">
+      <div class="music-notes">
+        <span class="music-note">♪</span>
+        <span class="music-note">♫</span>
+        <span class="music-note">♩</span>
+      </div>
+      <span class="hero-bird-emoji">🐦</span>
+      <span class="hero-mic">🎙</span>
+    </div>
+  </div>
+
+  <div class="welcome-title">深圳鸟叫挑战<br>Bird Call Challenge</div>
+  <div class="welcome-sub">学一学深圳这些邻居们的叫声吧～</div>
+
+  <div class="card">
+    <ul class="rules-list">
+      <li><span class="step-num">🎵</span><span>一共 <strong>五关</strong>，每关认识一只深圳邻居鸟</span></li>
+      <li><span class="step-num">👂</span><span>先听它怎么叫，仔细感受节奏和音调</span></li>
+      <li><span class="step-num">🎤</span><span>快来模仿 8 秒，看看你能以假乱真吗？</span></li>
+      <li><span class="step-num">🏆</span><span>满分 500 分，看看你能拿几分！</span></li>
+    </ul>
+  </div>
+  <button class="btn btn-primary btn-lg btn-full" onclick="startGame()">开始挑战 🚀</button>
+</div>
+
+<!-- ════════════════════ 抽鸟 ════════════════════ -->
+<div id="screen-draw" class="screen">
+  <div class="round-badge" id="roundBadge">第 1 / 5 轮</div>
+  <div class="progress-bar"><div class="progress-fill" id="pFill" style="width:0%"></div></div>
+
+  <div class="bird-photo-card">
+    <img id="drawPhoto" src="" alt="">
+    <div class="photo-credit" id="drawCredit"></div>
+    <div class="bird-info-row">
+      <div class="bird-name-cn" id="drawName">-</div>
+      <div class="bird-name-en" id="drawNameEn">-</div>
+      <div class="call-badge" id="drawCallBadge">-</div>
+    </div>
+  </div>
+
+  <div class="audio-player">
+    <div class="audio-title">👂 先听听它怎么叫</div>
+    <div class="wave-bars" id="waveBars"></div>
+    <div class="audio-btns">
+      <button class="btn btn-secondary" id="btnPlay" onclick="playCall()">▶ 播放叫声</button>
+      <button class="btn btn-secondary" id="btnReplay" onclick="playCall()" disabled style="display:none">🔁 再次播放</button>
+    </div>
+    <div class="audio-note" id="audioNote"></div>
+  </div>
+
+  <button class="btn btn-primary btn-full" id="btnGoRec" onclick="goRecord()" disabled>
+    我学会啦，开始模仿！🎤
+  </button>
+</div>
+
+<!-- ════════════════════ 录音 ════════════════════ -->
+<div id="screen-record" class="screen">
+  <div class="round-badge" id="recRoundBadge">第 1 / 5 轮</div>
+  <div class="progress-bar"><div class="progress-fill" id="pFill2" style="width:0%"></div></div>
+
+  <div class="record-mini-card">
+    <img id="recPhoto" src="" alt="">
+    <div>
+      <div class="rmc-name" id="recName">-</div>
+      <div class="rmc-call" id="recCall">-</div>
+    </div>
+  </div>
+
+  <div class="record-zone">
+    <span class="mic-icon" id="micIcon">🎤</span>
+    <div class="record-hint" id="recHint">
+      按住下方按钮开始录制，松手即停止<br>
+      录制 <strong>最多8秒</strong>，注意节奏和起伏变化
+    </div>
+    <div class="record-timer" id="recTimer"></div>
+    <div class="rec-bar-wrap"><div class="rec-bar-fill" id="recBarFill"></div></div>
+  </div>
+
+  <div class="mic-err" id="micErr">⚠️ 无法访问麦克风。请在地址栏左侧点击锁图标，允许麦克风权限后刷新页面。</div>
+  <div class="analyzing" id="analyzing">
+    <div class="spinner"></div>
+    <div style="font-size:15px;color:#666">正在分析你的叫声节奏……</div>
+  </div>
+
+  <button class="btn btn-danger btn-full" id="btnRec"
+    onmousedown="startRec()" ontouchstart="startRec(event)"
+    onmouseup="stopRec()" ontouchend="stopRec(event)"
+    onmouseleave="stopRec()">
+    🎙 按住录制
+  </button>
+  <button class="btn btn-secondary btn-full" id="btnSkip" onclick="doSkip()">跳过这轮（只看科普）</button>
+</div>
+
+<!-- ════════════════════ 得分 ════════════════════ -->
+<div id="screen-score" class="screen">
+  <div class="round-badge" id="scoreRoundBadge">第 1 / 5 轮</div>
+
+  <div class="score-card">
+    <div class="score-num" id="scoreNum">72</div>
+    <div class="score-lbl">本轮得分</div>
+    <div class="score-stars" id="scoreStars">⭐⭐⭐</div>
+    <div class="comment-box" id="commentBox">-</div>
+  </div>
+
+  <!-- 科普卡 -->
+  <div class="sci-card">
+    <div class="sci-photo">
+      <img id="sciPhoto" src="" alt="">
+      <div class="sci-photo-credit" id="sciCredit"></div>
+    </div>
+    <div class="sci-body">
+      <div class="sci-heading">
+        <img id="sciThumb" src="" alt="" class="sh-img">
+        <div>
+          <div class="sh-t1" id="sciName">-</div>
+          <div class="sh-t2" id="sciNameEn">-</div>
+        </div>
+      </div>
+      <div class="sci-mnemonic">
+        <div class="sm-label">叫声口诀</div>
+        <div class="sm-val" id="sciMnemonic">-</div>
+      </div>
+      <div class="sci-grid" id="sciFacts"></div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary btn-full" id="btnNext" onclick="nextRound()">下一轮 →</button>
+</div>
+
+<!-- ════════════════════ 结算 ════════════════════ -->
+<div id="screen-final" class="screen">
+  <div class="final-card">
+    <div style="font-size:22px;font-weight:800;color:var(--green)">挑战结束！</div>
+    <div class="total-score" id="totalScore">0</div>
+    <div class="total-lbl">总得分（满分 <span id="maxScore">500</span>）</div>
+    <div class="rank-badge" id="rankBadge">🐦 鸟叫新手</div>
+    <div class="rank-comment" id="rankComment">-</div>
+  </div>
+  <div class="history-wrap">
+    <div class="history-title-row">各轮战绩</div>
+    <div class="history-items" id="histItems"></div>
+  </div>
+  <button class="btn btn-primary btn-full btn-lg" onclick="restartGame()">再来一局 🔄</button>
+  <button class="btn btn-secondary btn-full" onclick="goWelcome()">回主页</button>
+</div>
+
+</div><!-- #app -->
+
+<script>
+/* ═══════════════════════════════════════════
+   鸟类数据
+═══════════════════════════════════════════ */
+const BIRDS = [
+  {
+    id:'koel', nameCN:'噪鹃', nameEN:'Asian Koel', scientific:'Eudynamys scolopaceus',
+    photo:'assets/photos/koel.jpg', credit:'© iNaturalist / CC BY-NC',
+    callDesc:'升调"哦咯哦咯"，越叫越高亢停不下来',
+    audio:'assets/audio/koel.m4a',
+    mnemonic:'oi～音调持续上升！！！',
+    facts:{
+      外形特征:'雄鸟全身哑光黑色，眼睛红色；雌鸟棕色带白斑，隐匿性强。',
+      叫声特点:'繁殖期雄鸟从清晨叫到日落，音阶连续上升。',
+      深圳分布:'城区绿化带全年可听，春天繁殖期最吵，几乎无处不在呜呜呜～',
+      趣闻:'巢寄生高手！把蛋偷偷下在乌鸫巢里，让别人帮孵化，毫无愧疚感。',
+    }
+  },
+  {
+    id:'dove', nameCN:'珠颈斑鸠', nameEN:'Spotted Dove', scientific:'Spilopelia chinensis',
+    photo:'assets/photos/dove.jpg', credit:'© iNaturalist / CC BY-NC',
+    callDesc:'"咕咕—咕！"低沉圆润，三连音节奏感强',
+    audio:'assets/audio/dove.m4a',
+    mnemonic:'"咕咕—咕！咕咕—咕！"（低沉圆润，重音落在末尾）',
+    facts:{
+      外形特征:'灰褐色羽衣，颈侧有醒目的黑白珠点斑块，尾羽外侧白色，体型圆润。',
+      叫声特点:'叫声低沉悠远，三音节节奏清晰，常在清晨和傍晚反复鸣叫，是城市最熟悉的背景音之一。',
+      深圳分布:'公园、小区绿化、郊野均极常见，是深圳数量最多的鸠鸽类。',
+      趣闻:'珠颈斑鸠对生活环境要求极低，机场草坪、高楼天台都能繁殖，是真正的城市适应者。是隼隼的"好朋友"～',
+    }
+  },
+  {
+    id:'magpie_robin', nameCN:'鹊鸲', nameEN:'Oriental Magpie-Robin', scientific:'Copsychus saularis',
+    photo:'assets/photos/magpie_robin.jpg', credit:'© iNaturalist / CC BY-NC',
+    callDesc:'婉转多变的口哨旋律，清晨最响亮的歌手',
+    audio:'assets/audio/magpie_robin.m4a',
+    mnemonic:'唧— 升调 当它发出 咔— 的警报声时就是在骂人啦',
+    facts:{
+      外形特征:'雄鸟黑白分明，头胸黑色有蓝紫光泽，腹部白色，翅上白斑显眼；雌鸟灰褐替代黑色。',
+      叫声特点:'鸣声极为丰富多变，擅长即兴创作，是深圳城市公园清晨最动听的"歌手"之一。',
+      深圳分布:'城市公园、社区花园极为常见，喜欢站在高处鸣唱，领地意识强。',
+      趣闻:'鹊鸲是孟加拉国的国鸟！它在亚洲文化中长久以来象征吉祥，叫声婉转被誉为"亚洲夜莺"。',
+    }
+  },
+  {
+    id:'waterhen', nameCN:'白胸苦恶鸟', nameEN:'White-breasted Waterhen', scientific:'Amaurornis phoenicurus',
+    photo:'assets/photos/waterhen.jpg', credit:'© iNaturalist / CC BY-NC',
+    callDesc:'"苦哇！苦哇！"沙哑嘶吼，夜里更响',
+    audio:'assets/audio/waterhen.m4a',
+    mnemonic:'"苦哇！苦哇！苦苦哇！"（沙哑低沉，连续爆发）',
+    facts:{
+      外形特征:'脸和胸腹纯白，背部灰褐，体形圆胖，嘴基红色，腿长善奔跑。',
+      叫声特点:'叫声沙哑粗粝，每次鸣叫都像在发泄怒气，尤其夜里格外响亮。',
+      深圳分布:'溪流、湿地、公园草地边均有，各大公园湖边常见。',
+      趣闻:'属于秧鸡科，善奔跑但不擅飞行，遇危险宁愿疯狂奔跑也不起飞！',
+    }
+  },
+  {
+    id:'egret', nameCN:'白鹭', nameEN:'Little Egret', scientific:'Egretta garzetta',
+    photo:'assets/photos/egret.jpg', credit:'© iNaturalist / CC BY-NC',
+    callDesc:'"啊～～～ 啊～～～"短促低沉，与优雅外形反差极大',
+    audio:'assets/audio/egret.m4a',
+    mnemonic:'"啊～～～ 啊～～～"（低沉短促，起飞时响）',
+    facts:{
+      外形特征:'通体雪白，黑喙黑腿，繁殖期背部和头部生出蓬松丝状饰羽，极美。',
+      叫声特点:'平时安静，受惊或起飞时发出低沉叫声，与优雅形象形成强烈反差。',
+      深圳分布:'深圳湾、大沙河公园、各大水库河道常见，你有在家门口见到过白鹭吗？',
+      趣闻:'经常能听到路人对着白鹭喊：看，是白鹤！（汗）',
+    }
+  },
+  {
+    id:'blackbird', nameCN:'乌鸫', nameEN:'Common Blackbird', scientific:'Turdus merula',
+    photo:'assets/photos/blackbird.jpeg', credit:'© 自摄 / 塔斯马尼亚 2025',
+    callDesc:'"唔—嘟嘟嘟"旋律悠扬绵长，鸟中歌唱家',
+    audio:'assets/audio/blackbird.m4a',
+    mnemonic:'是不是很熟悉？它可是模仿电动车报警声大师！',
+    facts:{
+      外形特征:'雄鸟全身哑光黑，橘黄色喙和眼圈醒目；雌鸟褐色，腹部有细纹。',
+      叫声特点:'鸣声复杂多变，富含旋律，欧洲称其"最美歌喉"，可连唱数分钟不重复。',
+      深圳分布:'深圳常见留鸟，城市公园、小区绿化全年可见，喜欢在地面翻找虫子。',
+      趣闻:'也是噪鹃常光顾的"保姆鸟"，经常被噪鹃偷偷寄蛋进巢里，真是倒霉！',
+    }
+  },
+];
+
+/* ═══════════════════════════════════════════
+   鸟叫音频特征数据（由Python脚本分析生成）
+   用于和玩家录音做对比打分
+═══════════════════════════════════════════ */
+const BIRD_FEATURES = {
+  "koel":         {"buckets":[0.9019,0.9314,1.0,0.8957,0.8991,0.8977,0.941,0.9163,0.9438,0.8991,0.9284,0.9407,0.9176,0.9513,0.9028,0.9276,0.9125,0.9025,0.9017,0.9695],"std":0.0269,"zcr":1.0,"duty":1.0,"avg":0.924},
+  "dove":         {"buckets":[0.9111,1.0,0.9102,0.918,0.9121,0.9138,0.9516,0.9173,0.9168,0.9184,0.9124,0.9718,0.9024,0.9028,0.8997,0.903,0.956,0.9163,0.9121,0.9036],"std":0.0258,"zcr":1.0,"duty":1.0,"avg":0.9225},
+  "magpie_robin": {"buckets":[0.8911,0.9077,1.0,0.9011,0.8992,0.892,0.8964,0.9043,0.9446,0.8912,0.895,0.8973,0.8905,0.8937,0.8897,0.9481,0.9138,0.9135,0.9109,0.895],"std":0.0263,"zcr":1.0,"duty":1.0,"avg":0.9088},
+  "waterhen":     {"buckets":[0.9308,1.0,0.923,0.9245,0.9308,0.9275,0.937,0.9692,0.9467,0.9217,0.9366,0.9809,0.9297,0.9259,0.9348,0.9386,0.9684,0.9295,0.9359,0.9289],"std":0.0209,"zcr":1.0,"duty":1.0,"avg":0.941},
+  "egret":        {"buckets":[0.8842,0.8832,0.8884,1.0,0.9029,0.885,0.8698,0.8841,0.8864,0.8735,0.9292,0.8902,0.8818,0.8811,0.8896,0.8859,0.8974,0.8955,0.944,0.886],"std":0.029,"zcr":1.0,"duty":1.0,"avg":0.8969},
+  "blackbird":    {"buckets":[0.9253,0.924,1.0,0.9503,0.9251,0.9328,0.9442,0.9364,0.985,0.9417,0.9402,0.9442,0.9496,0.9857,0.9306,0.9361,0.9297,0.9392,0.9904,0.9416],"std":0.0227,"zcr":1.0,"duty":1.0,"avg":0.9476},
+};
+
+/* ═══════════════════════════════════════════
+   评语库
+═══════════════════════════════════════════ */
+const CMTS = {
+  excellent:['哇！节奏和起伏都对上了，这只鸟可能都要回头！','太传神了，声音的波动感完全匹配，继续你就是鸟王！','完美！不仅发声，节奏感也相当准，这鸟要跟你交朋友！'],
+  good:     ['有那味儿！节奏对了，再多听几遍，下次肯定更准！','不错！声音起伏挺丰富的，差一点就完全对上了。','有感觉！方向对了，把节奏再磨一磨就能骗到真鸟。'],
+  mid:      ['有点意思！发声了但节奏变化还不够，再练练！','入门了！声音的起伏感还需要加强，多听原声感受一下。','有基础！节奏和波动是模仿鸟叫的关键，加油！'],
+  low:      ['嗯……发声不够连贯，鸟叫的精髓在起伏感，再试试！','声音变化太少，鸟儿表示需要翻译。但勇气满分！','努力了！这只鸟叫声比较有特点，多听几遍原声再来！'],
+  silent:   ['好像没收到你的声音，是麦克风太害羞了？','录音几乎没有声音，下次大声一点！'],
+  skip:     ['没事，光是听叫声认识这只鸟，今天就没白来！','了解就是收获！下次可以大胆尝试模仿！','科普到位！认识了这只鸟比什么都重要。'],
+};
+
+/* ═══════════════════════════════════════════
+   游戏状态
+═══════════════════════════════════════════ */
+const TOTAL_ROUNDS = 5;
+const REC_SECS = 8;
+
+let G = {
+  round: 0, scores: [], usedBirds: [],
+  currentBird: null,
+  audio: null,
+  recorder: null, chunks: [],
+  timer: null,
+};
+
+/* ═══════════════════════════════════════════
+   初始化
+═══════════════════════════════════════════ */
+window.onload = () => {
+  buildScatter();
+  buildWaveBars();
+  spawnFlyingBirds();
+};
+
+function buildScatter() {
+  const container = document.getElementById('scatterBirds');
+  if (!container) return;
+  // 散落位置（left%, top%），避开中心区域
+  const positions = [
+    {l:2,  t:10, delay:0,    size:54},
+    {l:72, t:5,  delay:0.5,  size:50},
+    {l:80, t:55, delay:1.0,  size:56},
+    {l:60, t:78, delay:1.5,  size:48},
+    {l:5,  t:65, delay:0.8,  size:52},
+    {l:15, t:38, delay:0.3,  size:46},
+  ];
+  const picks = [...BIRDS].sort(()=>Math.random()-.5).slice(0, positions.length);
+  picks.forEach((bird, i) => {
+    const pos = positions[i];
+    const el = document.createElement('div');
+    el.className = 'scatter-bird';
+    el.style.cssText = `left:${pos.l}%;top:${pos.t}%;width:${pos.size}px;height:${pos.size}px;animation-delay:${pos.delay}s;`;
+    const img = document.createElement('img');
+    img.src = bird.photo; img.alt = bird.nameCN;
+    el.appendChild(img);
+    container.appendChild(el);
+  });
+}
+
+function buildWaveBars() {
+  const c = document.getElementById('waveBars');
+  for (let i=0;i<14;i++) {
+    const b = document.createElement('div');
+    b.className = 'wave-bar';
+    const h = 5+Math.random()*22;
+    b.style.height = h+'px'; b.style.setProperty('--h',h+'px');
+    b.style.animationDelay = (i*.06)+'s';
+    c.appendChild(b);
+  }
+}
+
+function spawnFlyingBirds() {
+  const c = document.getElementById('flying');
+  ['🐦','🦜','🦢','🐤'].forEach((e,i) => {
+    const b = document.createElement('div'); b.className='fb'; b.textContent=e;
+    b.style.top=(10+i*20)+'%';
+    b.style.animationDuration=(14+i*4)+'s';
+    b.style.animationDelay=-(i*5)+'s';
+    b.style.fontSize=(14+i*3)+'px';
+    c.appendChild(b);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   屏幕切换
+═══════════════════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function goWelcome() { showScreen('screen-welcome'); }
+
+/* ═══════════════════════════════════════════
+   游戏流程
+═══════════════════════════════════════════ */
+function startGame() {
+  G.round=0; G.scores=[]; G.usedBirds=[];
+  setupRound();
+}
+function restartGame() { startGame(); }
+function nextRound() {
+  if (G.round >= TOTAL_ROUNDS) { showFinal(); return; }
+  setupRound();
+}
+
+function setupRound() {
+  G.round++;
+  let pool = BIRDS.filter(b=>!G.usedBirds.includes(b.id));
+  if (!pool.length) { G.usedBirds=[]; pool=[...BIRDS]; }
+  const bird = pool[Math.floor(Math.random()*pool.length)];
+  G.usedBirds.push(bird.id);
+  G.currentBird = bird;
+
+  // 更新进度
+  const pct = (G.round-1)/TOTAL_ROUNDS*100;
+  ['pFill','pFill2'].forEach(id=>document.getElementById(id).style.width=pct+'%');
+  [`roundBadge`,`recRoundBadge`,`scoreRoundBadge`].forEach(id=>
+    document.getElementById(id).textContent=`第 ${G.round} / ${TOTAL_ROUNDS} 轮`);
+
+  // 渲染抽鸟页
+  document.getElementById('drawPhoto').src = bird.photo;
+  document.getElementById('drawCredit').textContent = bird.credit||'';
+  document.getElementById('drawName').textContent = bird.nameCN;
+  document.getElementById('drawNameEn').textContent = bird.nameEN+' · '+bird.scientific;
+  document.getElementById('drawCallBadge').textContent = '📢 '+bird.callDesc;
+  document.getElementById('btnGoRec').disabled = true;
+  document.getElementById('audioNote').textContent = '';
+  // 重置播放按钮
+  document.getElementById('btnPlay').style.display = '';
+  document.getElementById('btnPlay').disabled = false;
+  document.getElementById('btnReplay').style.display = 'none';
+  stopCall();
+  showScreen('screen-draw');
+}
+
+/* ═══════════════════════════════════════════
+   音频播放
+═══════════════════════════════════════════ */
+function playCall() {
+  stopCall();
+  const audio = new Audio(G.currentBird.audio);
+  G.audio = audio;
+  // 不循环，播放一次
+  audio.loop = false;
+  audio.play().then(()=>{
+    waveOn();
+    document.getElementById('btnPlay').style.display = 'none';
+    document.getElementById('btnReplay').style.display = 'none';
+    document.getElementById('btnGoRec').disabled = false;
+  }).catch(e=>{
+    document.getElementById('audioNote').innerHTML='⚠️ 音频加载失败，请检查本地服务器。';
+    document.getElementById('btnGoRec').disabled=false;
+  });
+  audio.onended = () => {
+    waveOff();
+    // 播放结束，显示"再次播放"按钮
+    document.getElementById('btnPlay').style.display = 'none';
+    document.getElementById('btnReplay').style.display = '';
+    document.getElementById('btnReplay').disabled = false;
+  };
+  audio.onerror = () => {
+    waveOff();
+    document.getElementById('btnPlay').style.display = '';
+    document.getElementById('btnReplay').style.display = 'none';
+    document.getElementById('btnGoRec').disabled = false;
+    document.getElementById('audioNote').textContent='⚠️ 音频播放失败';
+  };
+}
+function stopCall() {
+  if (G.audio) { G.audio.pause(); G.audio.src=''; G.audio=null; }
+  waveOff();
+}
+function setBtns(playing, stopped) {
+  // 兼容旧调用，现在统一由播放逻辑控制按钮显示
+}
+function waveOn()  { document.querySelectorAll('.wave-bar').forEach(b=>b.classList.add('playing')); }
+function waveOff() { document.querySelectorAll('.wave-bar').forEach(b=>{ b.classList.remove('playing'); const h=5+Math.random()*22; b.style.height=h+'px'; }); }
+
+/* ═══════════════════════════════════════════
+   录音
+═══════════════════════════════════════════ */
+function goRecord() {
+  stopCall();
+  const bird = G.currentBird;
+  document.getElementById('recPhoto').src = bird.photo;
+  document.getElementById('recName').textContent = bird.nameCN;
+  document.getElementById('recCall').textContent = bird.callDesc;
+  document.getElementById('recTimer').textContent = '';
+  document.getElementById('recBarFill').style.width = '0%';
+  document.getElementById('micIcon').className = 'mic-icon';
+  document.getElementById('recHint').innerHTML = '按住下方按钮开始录制，松手即停止<br>录制 <strong>最多8秒</strong>，注意节奏和起伏变化';
+  document.getElementById('micErr').className = 'mic-err';
+  document.getElementById('analyzing').className = 'analyzing';
+  const btnRec = document.getElementById('btnRec');
+  btnRec.disabled = false;
+  btnRec.textContent = '🎙 按住录制';
+  document.getElementById('btnSkip').style.display = '';
+  showScreen('screen-record');
+}
+
+let G_stream = null;
+
+async function startRec(e) {
+  if (e) e.preventDefault();
+  const btnRec = document.getElementById('btnRec');
+  if (btnRec.disabled) return;
+  // 已在录制中，忽略
+  if (G.recorder && G.recorder.state === 'recording') return;
+
+  document.getElementById('micErr').className = 'mic-err';
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({audio:true,video:false}); }
+  catch(err) { document.getElementById('micErr').className='mic-err show'; return; }
+
+  G_stream = stream;
+  G.chunks = [];
+  const mr = new MediaRecorder(stream, {mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':''});
+  G.recorder = mr;
+  mr.ondataavailable = ev => { if(ev.data.size>0) G.chunks.push(ev.data); };
+  mr.onstop = () => {
+    if (G_stream) { G_stream.getTracks().forEach(t=>t.stop()); G_stream=null; }
+    analyzeAndScore();
+  };
+  mr.start(100);
+
+  document.getElementById('micIcon').className = 'mic-icon recording';
+  btnRec.textContent = '🔴 松手停止';
+  document.getElementById('btnSkip').style.display = 'none';
+
+  let elapsed = 0;
+  const TICK = 50, totalMs = REC_SECS * 1000;
+  G.timer = setInterval(() => {
+    elapsed += TICK;
+    const rem = Math.max(0, REC_SECS - elapsed/1000);
+    document.getElementById('recTimer').textContent = rem.toFixed(1)+' 秒';
+    document.getElementById('recBarFill').style.width = (elapsed/totalMs*100)+'%';
+    if (elapsed >= totalMs) {
+      // 达到最大时间自动停止
+      stopRec();
+    }
+  }, TICK);
+}
+
+function stopRec(e) {
+  if (e) e.preventDefault();
+  if (!G.recorder || G.recorder.state !== 'recording') return;
+  clearInterval(G.timer);
+  G.recorder.stop();
+  document.getElementById('micIcon').className = 'mic-icon';
+  document.getElementById('recTimer').textContent = '';
+  document.getElementById('analyzing').className = 'analyzing show';
+  const btnRec = document.getElementById('btnRec');
+  btnRec.disabled = true;
+  btnRec.textContent = '🎙 按住录制';
+}
+
+function doSkip() {
+  stopCall();
+  showScore(0,'skip',pickOne(CMTS.skip));
+}
+
+/* ═══════════════════════════════════════════
+   ★ 改进的打分算法 v3 ★
+   
+   策略：把玩家录音和鸟叫音频的特征做对比
+   1. 无声 → 5-15分
+   2. 和鸟叫的节奏波动相似度（桶向量余弦相似度）
+   3. 响度变化量（std）与鸟叫std的接近程度
+   4. 发声节拍数（ZCR proxy）接近程度
+   5. 发声占比（duty cycle）
+   随机加成仅 ±6，避免乱叫拿高分
+═══════════════════════════════════════════ */
+function analyzeAndScore() {
+  const birdId = G.currentBird.id;
+  const ref = BIRD_FEATURES[birdId]; // 鸟叫参考特征
+
+  setTimeout(() => {
+    const blob = new Blob(G.chunks, {type:'audio/webm'});
+    const reader = new FileReader();
+    reader.onload = () => {
+      const ctx = new (window.AudioContext||window.webkitAudioContext)();
+      ctx.decodeAudioData(reader.result).then(buf => {
+        const data = buf.getChannelData(0);
+        const sr   = buf.sampleRate;
+        const n    = data.length;
+
+        // —— 1. 全段RMS ——
+        let s2=0; for(let i=0;i<n;i++) s2+=data[i]*data[i];
+        const rms = Math.sqrt(s2/n);
+
+        if (rms < 0.006) {
+          ctx.close();
+          showScore(5+Math.floor(Math.random()*10),'silent',pickOne(CMTS.silent));
+          return;
+        }
+
+        // —— 2. 分帧响度轮廓 → 20桶 ——
+        const fSz = Math.floor(sr*0.05); // 50ms帧
+        const fCnt = Math.floor(n/fSz);
+        const frameRMS = [];
+        for(let f=0;f<fCnt;f++){
+          let s=0; const st=f*fSz,en=st+fSz;
+          for(let i=st;i<en;i++) s+=data[i]*data[i];
+          frameRMS.push(Math.sqrt(s/fSz));
+        }
+        const maxF = Math.max(...frameRMS,1e-9);
+        const normF = frameRMS.map(v=>v/maxF);
+
+        // 量化到20桶
+        const bs = Math.max(1,Math.floor(normF.length/20));
+        const userBuckets = [];
+        for(let i=0;i<20;i++){
+          const ch = normF.slice(i*bs,(i+1)*bs);
+          userBuckets.push(ch.length? ch.reduce((a,b)=>a+b,0)/ch.length : 0);
+        }
+
+        // —— 3. 余弦相似度（节奏轮廓匹配） ——
+        const refB = ref.buckets;
+        let dot=0,nu=0,nr=0;
+        for(let i=0;i<20;i++){
+          dot+=userBuckets[i]*refB[i];
+          nu+=userBuckets[i]*userBuckets[i];
+          nr+=refB[i]*refB[i];
+        }
+        const cosine = dot/(Math.sqrt(nu)*Math.sqrt(nr)+1e-9); // 0~1
+
+        // —— 4. 响度方差接近度 ——
+        const uAvg = userBuckets.reduce((a,b)=>a+b,0)/20;
+        const uStd = Math.sqrt(userBuckets.reduce((s,v)=>s+(v-uAvg)**2,0)/20);
+        // 和参考std比较：越接近越好，差距越大越低分
+        const stdRatio = Math.min(uStd,ref.std)/Math.max(uStd,ref.std+1e-9);
+        // 但如果std太低（太平），也扣分
+        const varScore = uStd > 0.03 ? Math.min(1, uStd/ref.std) : uStd/0.03;
+
+        // —— 5. 过零率接近程度 ——
+        let zc=0; for(let i=1;i<n;i++) if((data[i]>=0)!==(data[i-1]>=0)) zc++;
+        const userZcr = zc/n;
+        const zcrRef  = ref.zcr * 0.12; // 把MP3分析的zcr proxy映射回音频ZCR范围
+        const zcrScore = Math.min(1, userZcr>0 ? Math.min(userZcr,zcrRef)/Math.max(userZcr,zcrRef+1e-9) : 0);
+
+        // —— 6. 发声占比 ——
+        const THR = 0.05;
+        const duty = frameRMS.filter(v=>v>THR*maxF).length/fCnt;
+        const dutyScore = Math.min(1, duty/0.5);
+
+        // —— 合成 ——
+        const composite = cosine * 0.35
+                        + varScore * 0.30
+                        + zcrScore * 0.20
+                        + dutyScore * 0.15;
+
+        // 区间：10~92，随机±6
+        const base  = Math.round(10 + composite * 80);
+        const noise = Math.round((Math.random()-.5)*12);
+        const score = Math.max(10, Math.min(92, base+noise));
+
+        ctx.close();
+        showScore(score,'normal',pickOne(CMTS[score>=82?'excellent':score>=65?'good':score>=42?'mid':'low']));
+
+      }).catch(()=>{
+        const s = 25+Math.floor(Math.random()*20);
+        showScore(s,'normal',pickOne(CMTS.mid));
+      });
+    };
+    reader.readAsArrayBuffer(blob);
+  }, 1500);
+}
+
+/* ═══════════════════════════════════════════
+   显示得分页
+═══════════════════════════════════════════ */
+function showScore(score, mode, comment) {
+  document.getElementById('analyzing').className = 'analyzing';
+  const skip  = mode==='skip';
+  const silent= mode==='silent';
+  const disp  = (skip||silent)? '—' : score;
+  const stars = (skip||silent)? '' : toStars(score);
+
+  document.getElementById('scoreNum').textContent   = disp;
+  document.getElementById('scoreStars').textContent = stars;
+  document.getElementById('commentBox').textContent  = comment;
+
+  G.scores.push({bird:G.currentBird, score:skip||silent?0:score, skip, silent});
+
+  renderSciCard(G.currentBird);
+  document.getElementById('btnNext').textContent = G.round>=TOTAL_ROUNDS ? '查看总结 🏆' : '下一轮 →';
+
+  if (!skip && !silent && score>=80) confetti();
+  showScreen('screen-score');
+}
+
+function toStars(s) {
+  if(s>=88) return '⭐⭐⭐⭐⭐';
+  if(s>=74) return '⭐⭐⭐⭐';
+  if(s>=58) return '⭐⭐⭐';
+  if(s>=38) return '⭐⭐';
+  return '⭐';
+}
+
+/* ═══════════════════════════════════════════
+   渲染科普卡
+═══════════════════════════════════════════ */
+function renderSciCard(bird) {
+  document.getElementById('sciPhoto').src = bird.photo;
+  document.getElementById('sciCredit').textContent = bird.credit||'';
+  document.getElementById('sciThumb').src = bird.photo;
+  document.getElementById('sciName').textContent = bird.nameCN;
+  document.getElementById('sciNameEn').textContent = bird.nameEN+' · '+bird.scientific;
+  document.getElementById('sciMnemonic').textContent = bird.mnemonic;
+
+  const grid = document.getElementById('sciFacts');
+  grid.innerHTML = '';
+  const FULL_KEYS = new Set(['外形特征','叫声特点','深圳分布']);
+  Object.entries(bird.facts).forEach(([k,v]) => {
+    const isFun  = k==='趣闻';
+    const isFull = FULL_KEYS.has(k) || isFun;
+    const el = document.createElement('div');
+    el.className = 'sci-item' + (isFun ? ' fun' : isFull ? ' full' : '');
+    if (isFun) {
+      el.innerHTML = `<div class="si-label">🦜 趣闻</div><div class="si-val">${v}</div>`;
+    } else {
+      el.innerHTML = `<div class="si-label">${k}</div><div class="si-val">${v}</div>`;
+    }
+    grid.appendChild(el);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   最终结算
+═══════════════════════════════════════════ */
+function showFinal() {
+  const total = G.scores.reduce((s,r)=>s+r.score,0);
+  const max   = TOTAL_ROUNDS*100;
+  const pct   = total/max;
+
+  document.getElementById('totalScore').textContent = total;
+  document.getElementById('maxScore').textContent   = max;
+
+  const {badge,comment} = rank(pct);
+  document.getElementById('rankBadge').textContent   = badge;
+  document.getElementById('rankComment').textContent = comment;
+
+  const hist = document.getElementById('histItems');
+  hist.innerHTML = '';
+  G.scores.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'history-row';
+    row.innerHTML = `
+      <img src="${r.bird.photo}" alt="" onerror="this.style.display='none'">
+      <span class="h-bird">${r.bird.nameCN}</span>
+      <span class="h-score" style="color:${sColor(r.score)}">${r.skip||r.silent?'跳过':r.score+'分'}</span>
+      <span class="h-stars">${r.skip||r.silent?'':toStars(r.score)}</span>
+    `;
+    hist.appendChild(row);
+  });
+
+  if(pct>=0.78) confetti();
+  showScreen('screen-final');
+}
+
+function sColor(s){ return s>=72?'#27ae60':s>=48?'#e67e22':'#e74c3c'; }
+
+function rank(pct){
+  if(pct>=0.88) return {badge:'🥇 鸟语大师', comment:'你的嗓子里住着一只鸟！深圳所有鸟类都愿意和你做朋友！'};
+  if(pct>=0.72) return {badge:'🥈 资深鸟友', comment:'模仿得有模有样，节奏感很准，再练练就能骗到真鸟了！'};
+  if(pct>=0.55) return {badge:'🥉 鸟叫入门', comment:'有基础！继续磨练节奏感，深圳的鸟儿在等你搭话。'};
+  if(pct>=0.35) return {badge:'🐣 雏鸟一枚', comment:'科普算是到位了，至于叫声……注意节奏，再练练！'};
+  return {badge:'🐾 鸟叫新手', comment:'没关系，认识这些鸟就是收获！下次注意节奏起伏！'};
+}
+
+/* ═══════════════════════════════════════════
+   工具
+═══════════════════════════════════════════ */
+function pickOne(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function confetti(){
+  const c = document.getElementById('confetti');
+  const cols=['#2d6a4f','#52b788','#f4a261','#e76f51','#90e0ef','#ffd166','#ff6b6b'];
+  for(let i=0;i<55;i++){
+    const p=document.createElement('div'); p.className='cp';
+    p.style.left=Math.random()*100+'vw';
+    p.style.background=cols[Math.floor(Math.random()*cols.length)];
+    p.style.width=(5+Math.random()*7)+'px'; p.style.height=(5+Math.random()*7)+'px';
+    p.style.borderRadius=Math.random()>.5?'50%':'2px';
+    p.style.animationDuration=(1.5+Math.random()*2)+'s';
+    p.style.animationDelay=Math.random()*.4+'s';
+    c.appendChild(p);
+    p.addEventListener('animationend',()=>p.remove());
+  }
+}
+</script>
+</body>
+</html>

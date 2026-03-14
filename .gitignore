@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+venv/
+.venv/
+
+# 模型权重（体积大，不上传）
+*.pt
+*.pth
+runs/
+
+# Python 工具脚本（仅本地使用）
+_BirdNet.py
+_get_token.py
+batch_report.py
+bird_identifier.py
+config.py
+main.py
+photo_archiver.py
+photo_importer.py
+report_generator.py
+run.sh
+setup_autostart.py
+train_classifier.py
+
+# macOS
+.DS_Store
