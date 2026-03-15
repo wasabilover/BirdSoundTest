@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>深圳鸟叫挑战 🐦</title>
+<title>深圳小鸟模仿大赛 🐦</title>
+<meta property="og:title" content="深圳小鸟模仿大赛 🐦">
+<meta property="og:description" content="学一学深圳邻居鸟的叫声，看看你能以假乱真吗？">
+<meta property="og:image" content="assets/cover.jpg">
+<meta property="og:image:width" content="300">
+<meta property="og:image:height" content="300">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="assets/cover.jpg">
 <style>
 /* ─────────────── 全局 ─────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -124,7 +132,7 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
 }
 .scatter-bird {
   position:absolute;
-  width:64px; height:64px;
+  width:90px; height:90px;
   border-radius:50%; overflow:hidden;
   border:3px solid var(--white);
   box-shadow:0 3px 14px rgba(0,0,0,.15);
@@ -353,7 +361,7 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
     </div>
   </div>
 
-  <div class="welcome-title">深圳鸟叫挑战<br>Bird Call Challenge</div>
+  <div class="welcome-title">深圳小鸟模仿大赛<br>Bird Call Challenge</div>
   <div class="welcome-sub">学一学深圳这些邻居们的叫声吧～</div>
 
   <div class="card">
@@ -498,7 +506,7 @@ const BIRDS = [
     photo:'assets/photos/koel.jpg', credit:'© iNaturalist / CC BY-NC',
     callDesc:'升调"哦咯哦咯"，越叫越高亢停不下来',
     audio:'assets/audio/koel.m4a',
-    mnemonic:'oi～音调持续上升！！！',
+    mnemonic:'oi～ oi～ oi～ 音调持续上升⬆️',
     facts:{
       外形特征:'雄鸟全身哑光黑色，眼睛红色；雌鸟棕色带白斑，隐匿性强。',
       叫声特点:'繁殖期雄鸟从清晨叫到日落，音阶连续上升。',
@@ -511,12 +519,12 @@ const BIRDS = [
     photo:'assets/photos/dove.jpg', credit:'© iNaturalist / CC BY-NC',
     callDesc:'"咕咕—咕！"低沉圆润，三连音节奏感强',
     audio:'assets/audio/dove.m4a',
-    mnemonic:'"咕咕—咕！咕咕—咕！"（低沉圆润，重音落在末尾）',
+    mnemonic:'"古姑固——古姑固——"（低沉圆润，重音落在末尾）',
     facts:{
       外形特征:'灰褐色羽衣，颈侧有醒目的黑白珠点斑块，尾羽外侧白色，体型圆润。',
       叫声特点:'叫声低沉悠远，三音节节奏清晰，常在清晨和傍晚反复鸣叫，是城市最熟悉的背景音之一。',
       深圳分布:'公园、小区绿化、郊野均极常见，是深圳数量最多的鸠鸽类。',
-      趣闻:'珠颈斑鸠对生活环境要求极低，机场草坪、高楼天台都能繁殖，是真正的城市适应者。是隼隼的"好朋友"～',
+      趣闻:'珠颈斑鸠对生活环境要求极低，机场草坪、高楼天台都能繁殖，是真正的城市适应者。也为猛禽提供了稳定的食物，咳咳。',
     }
   },
   {
@@ -524,7 +532,7 @@ const BIRDS = [
     photo:'assets/photos/magpie_robin.jpg', credit:'© iNaturalist / CC BY-NC',
     callDesc:'婉转多变的口哨旋律，清晨最响亮的歌手',
     audio:'assets/audio/magpie_robin.m4a',
-    mnemonic:'唧— 升调 当它发出 咔— 的警报声时就是在骂人啦',
+    mnemonic:'"唧———" 升调⬆️，当它发出 "咔———" 的报警声就是在骂人啦',
     facts:{
       外形特征:'雄鸟黑白分明，头胸黑色有蓝紫光泽，腹部白色，翅上白斑显眼；雌鸟灰褐替代黑色。',
       叫声特点:'鸣声极为丰富多变，擅长即兴创作，是深圳城市公园清晨最动听的"歌手"之一。',
@@ -561,9 +569,9 @@ const BIRDS = [
   {
     id:'blackbird', nameCN:'乌鸫', nameEN:'Common Blackbird', scientific:'Turdus merula',
     photo:'assets/photos/blackbird.jpeg', credit:'© 自摄 / 深圳',
-    callDesc:'"唔—嘟嘟嘟"旋律悠扬绵长，鸟中歌唱家',
+    callDesc:'叫声变化多端，被称为百舌鸟👍',
     audio:'assets/audio/blackbird.m4a',
-    mnemonic:'是不是很熟悉？它可是模仿电动车报警声大师！',
+    mnemonic:'是不是很熟悉？它可是电动车警报声模仿大师！',
     facts:{
       外形特征:'雄鸟全身哑光黑，橘黄色喙和眼圈醒目；雌鸟褐色，腹部有细纹。',
       叫声特点:'鸣声复杂多变，富含旋律，欧洲称其"最美歌喉"，可连唱数分钟不重复。',
@@ -626,12 +634,12 @@ function buildScatter() {
   if (!container) return;
   // 散落位置（left%, top%），避开中心区域
   const positions = [
-    {l:2,  t:10, delay:0,    size:54},
-    {l:72, t:5,  delay:0.5,  size:50},
-    {l:80, t:55, delay:1.0,  size:56},
-    {l:60, t:78, delay:1.5,  size:48},
-    {l:5,  t:65, delay:0.8,  size:52},
-    {l:15, t:38, delay:0.3,  size:46},
+    {l:2,  t:10, delay:0,    size:80},
+    {l:72, t:5,  delay:0.5,  size:76},
+    {l:80, t:55, delay:1.0,  size:82},
+    {l:60, t:78, delay:1.5,  size:74},
+    {l:5,  t:65, delay:0.8,  size:78},
+    {l:15, t:38, delay:0.3,  size:72},
   ];
   const picks = [...BIRDS].sort(()=>Math.random()-.5).slice(0, positions.length);
   picks.forEach((bird, i) => {
