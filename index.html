@@ -537,10 +537,10 @@ const BIRDS = [
     photo:'assets/photos/dove.jpg', credit:'© iNaturalist / CC BY-NC',
     callDesc:'"咕咕—咕！"低沉圆润，三连音节奏感强',
     audio:'assets/audio/dove.m4a',
-    mnemonic:'"古姑固——古姑固——"（低沉圆润，重音落在末尾）',
+    mnemonic:'"古咕固— 古咕固—"',
     facts:{
       外形特征:'灰褐色羽衣，颈侧有醒目的黑白珠点斑块，尾羽外侧白色，体型圆润。',
-      叫声特点:'叫声低沉悠远，三音节节奏清晰，常在清晨和傍晚反复鸣叫，是城市最熟悉的背景音之一。',
+      叫声特点:'"古咕固— 古咕固—" 低沉圆润，三音节节奏清晰，常在清晨和傍晚反复鸣叫，是城市最熟悉的背景音之一。',
       深圳分布:'公园、小区绿化、郊野均极常见，是深圳数量最多的鸠鸽类。',
       趣闻:'珠颈斑鸠对生活环境要求极低，机场草坪、高楼天台都能繁殖，是真正的城市适应者。也为猛禽提供了稳定的食物，咳咳。',
     }
@@ -563,10 +563,10 @@ const BIRDS = [
     photo:'assets/photos/plaintive_cuckoo.jpg', credit:'© iNaturalist / CC BY-NC',
     callDesc:'"你——好——吗？" 八个音节反复上扬，夏日背景音',
     audio:'assets/audio/plaintive_cuckoo.m4a',
-    mnemonic:'"嘀嘀嘀嘀——嘀嘀嘀嘀——" 八个音节，越到后面越急促⬆️',
+    mnemonic:'八个音节，越到后面越急促⬆️',
     facts:{
       外形特征:'雄鸟上体棕褐色，头及胸部灰色，腹部皮黄色带细横纹；雌鸟上体有棕红色横斑。体型纤细，约23cm。',
-      叫声特点:'连续八个音节"嘀嘀嘀嘀嘀嘀嘀嘀"，音调逐渐上扬加速，声音清亮穿透力极强，是深圳夏季最标志性的鸟鸣之一。',
+      叫声特点:'音调逐渐上扬加速，声音清亮穿透力极强，是深圳夏季最标志性的鸟鸣之一。',
       深圳分布:'常见于城市公园、郊野林缘及村边树丛，喜隐蔽于茂密枝叶间鸣叫，闻其声难见其影。',
       趣闻:'八声杜鹃是典型的巢寄生鸟类，自己从不筑巢，专门把蛋偷偷产在苇莺等其他鸟的巢里，让别人帮忙孵化育雏，"鸠占鹊巢"说的就是它们这类！',
     }
@@ -605,7 +605,7 @@ const BIRDS = [
     mnemonic:'是不是很熟悉？它可是电动车警报声模仿大师！',
     facts:{
       外形特征:'雄鸟全身哑光黑，橘黄色喙和眼圈醒目；雌鸟褐色，腹部有细纹。',
-      叫声特点:'鸣声复杂多变，富含旋律，欧洲称其"最美歌喉"，可连唱数分钟不重复。',
+      叫声特点:'它可是电动车警报声模仿大师！鸣声复杂多变，富含旋律，可连唱数分钟不重复。',
       深圳分布:'深圳常见留鸟，城市公园、小区绿化全年可见，喜欢在地面翻找虫子。',
       趣闻:'也是噪鹃常光顾的"保姆鸟"，经常被噪鹃偷偷寄蛋进巢里，真是倒霉！',
     }
@@ -1022,10 +1022,10 @@ function analyzeAndScore() {
                         + transScore      * 0.25
                         + zcrScore        * 0.15;
 
-        // 底分27，上限95，随机±6，整体比上个版本高7分左右
-        const base  = Math.round(27 + composite * 66);
-        const noise = Math.round((Math.random()-.5)*12);
-        const score = Math.max(25, Math.min(95, base+noise));
+        // 底分42，上限92，随机±4，最低不低于38
+        const base  = Math.round(42 + composite * 50);
+        const noise = Math.round((Math.random()-.5)*8);
+        const score = Math.max(38, Math.min(95, base+noise));
 
         ctx.close();
         showScore(score,'normal',pickOne(CMTS[score>=82?'excellent':score>=65?'good':score>=42?'mid':'low']));
