@@ -160,6 +160,11 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
   flex-shrink:0;
 }
 .welcome-sub { font-size:14px; color:#555; text-align:center; line-height:1.6; flex-shrink:0; }
+.welcome-slogan {
+  font-size:13px; font-weight:700; text-align:center; letter-spacing:3px;
+  color:var(--green); opacity:0.55; flex-shrink:0;
+  text-transform:none;
+}
 .rules-list { list-style:none; display:flex; flex-direction:column; gap:9px; }
 .rules-list li { display:flex; align-items:flex-start; gap:10px; font-size:14px; color:#444; line-height:1.5; }
 .step-num { min-width:26px; height:26px; background:transparent; color:var(--green); border-radius:50%; font-size:18px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:0px; flex-shrink:0; }
@@ -375,6 +380,7 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
 
   <div class="welcome-title">深圳小鸟模仿大赛<br>Bird Call Challenge</div>
   <div class="welcome-sub">学一学深圳这些邻居们的叫声吧～</div>
+  <div class="welcome-slogan">来了就是深圳鸟 🦜</div>
 
   <div class="card">
     <ul class="rules-list">
@@ -548,7 +554,7 @@ const BIRDS = [
     mnemonic:'"唧———" 升调⬆️，当它发出 "咔———" 的报警声就是在骂人啦',
     facts:{
       外形特征:'雄鸟黑白分明，头胸黑色有蓝紫光泽，腹部白色，翅上白斑显眼；雌鸟灰褐替代黑色。',
-      叫声特点:'鸣声极为丰富多变，擅长即兴创作，是深圳城市公园清晨最动听的"歌手"之一。',
+      叫声特点:'"唧——" 升调⬆️，当它发出 "咔——" 的报警声就是在骂人啦😄',
       深圳分布:'城市公园、社区花园极为常见，喜欢站在高处鸣唱。',
       趣闻:'鹊鸲是孟加拉国的国鸟！它在亚洲文化中长久以来象征吉祥，叫声婉转被誉为"亚洲夜莺"。',
     }
@@ -999,10 +1005,10 @@ function analyzeAndScore() {
                         + transScore      * 0.25
                         + zcrScore        * 0.15;
 
-        // 底分从8提高到20，上限92，随机±6
-        const base  = Math.round(20 + composite * 70);
+        // 底分27，上限95，随机±6，整体比上个版本高7分左右
+        const base  = Math.round(27 + composite * 66);
         const noise = Math.round((Math.random()-.5)*12);
-        const score = Math.max(20, Math.min(92, base+noise));
+        const score = Math.max(25, Math.min(95, base+noise));
 
         ctx.close();
         showScore(score,'normal',pickOne(CMTS[score>=82?'excellent':score>=65?'good':score>=42?'mid':'low']));
