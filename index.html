@@ -579,7 +579,7 @@ const BIRDS = [
     mnemonic:'"苦哇！苦哇！苦苦哇！"（沙哑低沉，连续爆发）',
     facts:{
       外形特征:'脸和胸腹纯白，背部灰褐，体形圆胖，嘴基红色，腿长善奔跑。',
-      叫声特点:'叫声沙哑粗粝，每次鸣叫都像在发泄怒气，尤其夜里格外响亮。',
+      叫声特点:'叫声沙哑粗粝，尤其夜里格外响亮。',
       深圳分布:'溪流、湿地、公园草地边均有，各大公园湖边常见。',
       趣闻:'属于秧鸡科，善奔跑但不擅飞行，遇危险宁愿疯狂奔跑也不起飞！',
     }
@@ -1030,8 +1030,9 @@ function analyzeAndScore() {
         ctx.close();
         showScore(score,'normal',pickOne(CMTS[score>=82?'excellent':score>=65?'good':score>=42?'mid':'low']));
 
-      }).catch(()=>{
-        const s = 20+Math.floor(Math.random()*15);
+      }).catch((err)=>{
+        console.warn('音频解析失败，使用兜底分数', err);
+        const s = 42 + Math.floor(Math.random()*20);  // 兜底 42~61
         showScore(s,'normal',pickOne(CMTS.mid));
       });
     };
