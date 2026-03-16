@@ -83,6 +83,7 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
   width:100%; position:relative;
   height:220px; flex-shrink:0;
   display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
 }
 /* 中心图片小鸟 */
 .hero-bird-center {
@@ -153,7 +154,7 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
 }
 
 .welcome-title {
-  font-size:22px; font-weight:800; text-align:center; line-height:1.3;
+  font-size:26px; font-weight:800; text-align:center; line-height:1.3;
   background:linear-gradient(135deg,var(--green),var(--sky-dark));
   -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
   flex-shrink:0;
@@ -232,9 +233,9 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
   flex-shrink:0;
 }
 .score-row {
-  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  display:flex; align-items:center; justify-content:center; gap:20px;
 }
-.score-left { display:flex; flex-direction:column; align-items:flex-start; }
+.score-left { display:flex; flex-direction:column; align-items:center; }
 .score-num {
   font-size:58px; font-weight:900; line-height:1;
   background:linear-gradient(135deg,var(--coral),#9b0000);
@@ -379,7 +380,7 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
     <ul class="rules-list">
       <li><span class="step-num">🎵</span><span>一共 <strong>五关</strong>，每关认识一只深圳邻居鸟</span></li>
       <li><span class="step-num">👂</span><span>先听它怎么叫，仔细感受节奏和音调</span></li>
-      <li><span class="step-num">🎤</span><span>快来模仿 8 秒，看看你能以假乱真吗？</span></li>
+      <li><span class="step-num">🎤</span><span>快来模仿 5 秒，看看你能以假乱真吗？</span></li>
       <li><span class="step-num">🏆</span><span>满分 500 分，看看你能拿几分！</span></li>
     </ul>
   </div>
@@ -548,7 +549,7 @@ const BIRDS = [
     facts:{
       外形特征:'雄鸟黑白分明，头胸黑色有蓝紫光泽，腹部白色，翅上白斑显眼；雌鸟灰褐替代黑色。',
       叫声特点:'鸣声极为丰富多变，擅长即兴创作，是深圳城市公园清晨最动听的"歌手"之一。',
-      深圳分布:'城市公园、社区花园极为常见，喜欢站在高处鸣唱，领地意识强。',
+      深圳分布:'城市公园、社区花园极为常见，喜欢站在高处鸣唱。',
       趣闻:'鹊鸲是孟加拉国的国鸟！它在亚洲文化中长久以来象征吉祥，叫声婉转被誉为"亚洲夜莺"。',
     }
   },
@@ -646,12 +647,12 @@ function buildScatter() {
   if (!container) return;
   // 散落位置（left%, top%），避开中心区域
   const positions = [
-    {l:2,  t:10, delay:0,    size:80},
+    {l:2,  t:8,  delay:0,    size:80},
     {l:72, t:5,  delay:0.5,  size:76},
-    {l:80, t:55, delay:1.0,  size:82},
-    {l:60, t:78, delay:1.5,  size:74},
-    {l:5,  t:65, delay:0.8,  size:78},
-    {l:15, t:38, delay:0.3,  size:72},
+    {l:80, t:48, delay:1.0,  size:82},
+    {l:62, t:60, delay:1.5,  size:74},
+    {l:4,  t:55, delay:0.8,  size:78},
+    {l:16, t:32, delay:0.3,  size:72},
   ];
   const picks = [...BIRDS].sort(()=>Math.random()-.5).slice(0, positions.length);
   picks.forEach((bird, i) => {
@@ -697,16 +698,18 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
-  // 动态突出：进入鸟叫页面时高亮「播放叫声」，进入得分页面时高亮「下一轮」
+  // 动态突出：进入抽鸟页面时高亮「播放叫声」，进入得分页面时高亮「下一轮」
   document.querySelectorAll('.btn-pulse').forEach(b=>b.classList.remove('btn-pulse'));
-  if (id === 'screen-call') {
-    const btn = document.getElementById('btnPlay');
-    if (btn && !btn.disabled) btn.classList.add('btn-pulse');
+  if (id === 'screen-draw') {
+    setTimeout(()=>{
+      const btn = document.getElementById('btnPlay');
+      if (btn && !btn.disabled && btn.style.display !== 'none') btn.classList.add('btn-pulse');
+    }, 200);
   } else if (id === 'screen-score') {
     setTimeout(()=>{
       const btn = document.getElementById('btnNext');
       if (btn) btn.classList.add('btn-pulse');
-    }, 600); // 等得分动画稳定后再亮起
+    }, 600);
   }
 }
 function goWelcome() { showScreen('screen-welcome'); }
@@ -779,7 +782,8 @@ function playCall() {
     document.getElementById('btnReplay').disabled = false;
     // 播放结束，高亮「开始模仿」引导用户
     const goBtn = document.getElementById('btnGoRec');
-    if (goBtn && !goBtn.disabled) goBtn.classList.add('btn-pulse');
+    goBtn.disabled = false;
+    goBtn.classList.add('btn-pulse');
   };
   audio.onerror = () => {
     waveOff();
@@ -978,9 +982,8 @@ function analyzeAndScore() {
           if (active && !prevActive) transitions++;
           prevActive = active;
         }
-        // 参考鸟叫一般有2~8次节拍切换（5秒内）
-        const refTransitions = ref.duty < 0.8 ? 3 : 2; // 有停顿的鸟更多
-        const transScore = Math.min(1, transitions / Math.max(refTransitions, 2));
+        // 只要发声了就给基础分，有节拍切换加分
+        const transScore = Math.min(1, (transitions + 1) / 4);
 
         // —— 6. 过零率接近程度（音调粗略参考）——
         let zc=0; for(let i=1;i<n;i++) if((data[i]>=0)!==(data[i-1]>=0)) zc++;
@@ -988,16 +991,18 @@ function analyzeAndScore() {
         const zcrRef  = ref.zcr * 0.12;
         const zcrScore = Math.min(1, userZcr>0 ? Math.min(userZcr,zcrRef)/Math.max(userZcr,zcrRef+1e-9) : 0);
 
-        // —— 合成（中心化余弦权重提高，平坦度和间歇性加重惩罚）——
-        const composite = cosine     * 0.40   // 节奏轮廓匹配（中心化后有区分度）
-                        + varScore   * 0.25   // 起伏丰富度
-                        + transScore * 0.20   // 有节拍感/停顿
-                        + zcrScore   * 0.15;  // 音调粗略匹配
+        // —— 合成（降低门槛，让业余模仿也有 55~70 的中等分数）——
+        // varScore 门槛从 0.08 降到 0.04，对业余更宽容
+        const varScoreRelaxed = Math.min(1, uStd / 0.04);
+        const composite = cosine          * 0.35
+                        + varScoreRelaxed * 0.25
+                        + transScore      * 0.25
+                        + zcrScore        * 0.15;
 
-        // 区间：8~90，随机±4（缩紧噪声避免运气拉高）
-        const base  = Math.round(8 + composite * 80);
-        const noise = Math.round((Math.random()-.5)*8);
-        const score = Math.max(8, Math.min(90, base+noise));
+        // 底分从8提高到20，上限92，随机±6
+        const base  = Math.round(20 + composite * 70);
+        const noise = Math.round((Math.random()-.5)*12);
+        const score = Math.max(20, Math.min(92, base+noise));
 
         ctx.close();
         showScore(score,'normal',pickOne(CMTS[score>=82?'excellent':score>=65?'good':score>=42?'mid':'low']));
@@ -1107,11 +1112,11 @@ function showFinal() {
 function sColor(s){ return s>=72?'#27ae60':s>=48?'#e67e22':'#e74c3c'; }
 
 function rank(pct){
-  if(pct>=0.88) return {badge:'🥇 鸟语大师', comment:'你的嗓子里住着一只鸟！深圳所有鸟类都愿意和你做朋友！'};
-  if(pct>=0.72) return {badge:'🥈 资深鸟友', comment:'模仿得有模有样，节奏感很准，再练练就能骗到真鸟了！'};
-  if(pct>=0.55) return {badge:'🥉 鸟叫入门', comment:'有基础！继续磨练节奏感，深圳的鸟儿在等你搭话。'};
-  if(pct>=0.35) return {badge:'🐣 雏鸟一枚', comment:'科普算是到位了，至于叫声……注意节奏，再练练！'};
-  return {badge:'🐾 鸟叫新手', comment:'没关系，认识这些鸟就是收获！下次注意节奏起伏！'};
+  if(pct>=0.88) return {badge:'🥇 鸟语天才', comment:'天呀，你就是传说中的百灵鸟吧～深圳的鸟儿已经把你列为"同类"了！'};
+  if(pct>=0.72) return {badge:'🥈 鸟叫达人', comment:'哇！有几声简直以假乱真，再多练练你就能在公园里交到真朋友！'};
+  if(pct>=0.55) return {badge:'🥉 初级鸟友', comment:'入门成功！节奏感已经有了，声音的起伏再丰富一点，鸟儿就听懂了！'};
+  if(pct>=0.35) return {badge:'🐣 雏鸟破壳', comment:'嗯～至少你很有勇气！先把每首鸟叫多听几遍，感受它的节奏，你肯定行！'};
+  return {badge:'🐾 鸟叫新手', comment:'没关系，认识这些鸟本身就是今天最大的收获！下次放开嗓子大声点！'};
 }
 
 /* ═══════════════════════════════════════════
