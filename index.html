@@ -60,6 +60,13 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
 .btn:disabled { opacity:.45; cursor:not-allowed; transform:none!important; box-shadow:none!important; }
 .btn-full { width:100%; }
 .btn-lg   { padding:14px 34px; font-size:17px; }
+/* 动态突出效果：提示用户下一步点哪里 */
+@keyframes btn-glow {
+  0%   { box-shadow:0 4px 14px rgba(45,106,79,.30), 0 0 0 0 rgba(45,106,79,.5); transform:scale(1); }
+  50%  { box-shadow:0 6px 20px rgba(45,106,79,.45), 0 0 0 8px rgba(45,106,79,.0); transform:scale(1.03); }
+  100% { box-shadow:0 4px 14px rgba(45,106,79,.30), 0 0 0 0 rgba(45,106,79,.0); transform:scale(1); }
+}
+.btn-pulse { animation:btn-glow 1.4s ease-in-out infinite; }
 
 /* ─────────────── 进度 ─────────────── */
 .progress-bar { width:100%; height:5px; background:rgba(45,106,79,.12); border-radius:10px; overflow:hidden; flex-shrink:0; }
@@ -220,17 +227,21 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
 ════════════════════════════════════════ */
 .score-card {
   width:100%; background:var(--white); border-radius:18px;
-  padding:16px; box-shadow:var(--shadow);
-  display:flex; flex-direction:column; align-items:center; gap:6px;
+  padding:14px 16px; box-shadow:var(--shadow);
+  display:flex; flex-direction:column; gap:8px;
   flex-shrink:0;
 }
+.score-row {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.score-left { display:flex; flex-direction:column; align-items:flex-start; }
 .score-num {
-  font-size:68px; font-weight:900; line-height:1;
+  font-size:58px; font-weight:900; line-height:1;
   background:linear-gradient(135deg,var(--coral),#9b0000);
   -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
 }
 .score-lbl { font-size:12px; color:var(--gray); }
-.score-stars { font-size:24px; letter-spacing:3px; }
+.score-stars { font-size:32px; letter-spacing:4px; }
 .comment-box {
   width:100%; background:linear-gradient(135deg,#fff9f5,#ffeedd);
   border-left:4px solid var(--yellow); border-radius:0 10px 10px 0;
@@ -421,8 +432,8 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
   <div class="record-zone">
     <span class="mic-icon" id="micIcon">🎤</span>
     <div class="record-hint" id="recHint">
-      按住下方按钮开始录制，松手即停止<br>
-      录制 <strong>最多8秒</strong>，注意节奏和起伏变化
+      点击下方按钮开始录制，录制 <strong>5秒</strong>后自动停止<br>
+      也可再次点击提前结束
     </div>
     <div class="record-timer" id="recTimer"></div>
     <div class="rec-bar-wrap"><div class="rec-bar-fill" id="recBarFill"></div></div>
@@ -434,11 +445,8 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
     <div style="font-size:15px;color:#666">正在分析你的叫声节奏……</div>
   </div>
 
-  <button class="btn btn-danger btn-full" id="btnRec"
-    onmousedown="startRec()" ontouchstart="startRec(event)"
-    onmouseup="stopRec()" ontouchend="stopRec(event)"
-    onmouseleave="stopRec()">
-    🎙 按住录制
+  <button class="btn btn-danger btn-full" id="btnRec" onclick="toggleRec()">
+    🎙 点击录制
   </button>
   <button class="btn btn-secondary btn-full" id="btnSkip" onclick="doSkip()">跳过这轮（只看科普）</button>
 </div>
@@ -448,9 +456,13 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
   <div class="round-badge" id="scoreRoundBadge">第 1 / 5 轮</div>
 
   <div class="score-card">
-    <div class="score-num" id="scoreNum">72</div>
-    <div class="score-lbl">本轮得分</div>
-    <div class="score-stars" id="scoreStars">⭐⭐⭐</div>
+    <div class="score-row">
+      <div class="score-left">
+        <div class="score-num" id="scoreNum">72</div>
+        <div class="score-lbl">本轮得分</div>
+      </div>
+      <div class="score-stars" id="scoreStars">⭐⭐⭐</div>
+    </div>
     <div class="comment-box" id="commentBox">-</div>
   </div>
 
@@ -610,7 +622,7 @@ const CMTS = {
    游戏状态
 ═══════════════════════════════════════════ */
 const TOTAL_ROUNDS = 5;
-const REC_SECS = 8;
+const REC_SECS = 5;
 
 let G = {
   round: 0, scores: [], usedBirds: [],
@@ -685,6 +697,17 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
+  // 动态突出：进入鸟叫页面时高亮「播放叫声」，进入得分页面时高亮「下一轮」
+  document.querySelectorAll('.btn-pulse').forEach(b=>b.classList.remove('btn-pulse'));
+  if (id === 'screen-call') {
+    const btn = document.getElementById('btnPlay');
+    if (btn && !btn.disabled) btn.classList.add('btn-pulse');
+  } else if (id === 'screen-score') {
+    setTimeout(()=>{
+      const btn = document.getElementById('btnNext');
+      if (btn) btn.classList.add('btn-pulse');
+    }, 600); // 等得分动画稳定后再亮起
+  }
 }
 function goWelcome() { showScreen('screen-welcome'); }
 
@@ -738,10 +761,10 @@ function playCall() {
   stopCall();
   const audio = new Audio(G.currentBird.audio);
   G.audio = audio;
-  // 不循环，播放一次
   audio.loop = false;
   audio.play().then(()=>{
     waveOn();
+    document.getElementById('btnPlay').classList.remove('btn-pulse');
     document.getElementById('btnPlay').style.display = 'none';
     document.getElementById('btnReplay').style.display = 'none';
     document.getElementById('btnGoRec').disabled = false;
@@ -751,10 +774,12 @@ function playCall() {
   });
   audio.onended = () => {
     waveOff();
-    // 播放结束，显示"再次播放"按钮
     document.getElementById('btnPlay').style.display = 'none';
     document.getElementById('btnReplay').style.display = '';
     document.getElementById('btnReplay').disabled = false;
+    // 播放结束，高亮「开始模仿」引导用户
+    const goBtn = document.getElementById('btnGoRec');
+    if (goBtn && !goBtn.disabled) goBtn.classList.add('btn-pulse');
   };
   audio.onerror = () => {
     waveOff();
@@ -786,23 +811,31 @@ function goRecord() {
   document.getElementById('recTimer').textContent = '';
   document.getElementById('recBarFill').style.width = '0%';
   document.getElementById('micIcon').className = 'mic-icon';
-  document.getElementById('recHint').innerHTML = '按住下方按钮开始录制，松手即停止<br>录制 <strong>最多8秒</strong>，注意节奏和起伏变化';
+  document.getElementById('recHint').innerHTML = '点击下方按钮开始录制，录制 <strong>5秒</strong>后自动停止<br>也可再次点击提前结束';
   document.getElementById('micErr').className = 'mic-err';
   document.getElementById('analyzing').className = 'analyzing';
   const btnRec = document.getElementById('btnRec');
   btnRec.disabled = false;
-  btnRec.textContent = '🎙 按住录制';
+  btnRec.textContent = '🎙 点击录制';
   document.getElementById('btnSkip').style.display = '';
   showScreen('screen-record');
 }
 
 let G_stream = null;
 
+// 点击切换录制状态
+function toggleRec() {
+  if (G.recorder && G.recorder.state === 'recording') {
+    stopRec();
+  } else {
+    startRec();
+  }
+}
+
 async function startRec(e) {
   if (e) e.preventDefault();
   const btnRec = document.getElementById('btnRec');
   if (btnRec.disabled) return;
-  // 已在录制中，忽略
   if (G.recorder && G.recorder.state === 'recording') return;
 
   document.getElementById('micErr').className = 'mic-err';
@@ -822,7 +855,7 @@ async function startRec(e) {
   mr.start(100);
 
   document.getElementById('micIcon').className = 'mic-icon recording';
-  btnRec.textContent = '🔴 松手停止';
+  btnRec.textContent = '🔴 点击停止';
   document.getElementById('btnSkip').style.display = 'none';
 
   let elapsed = 0;
@@ -833,7 +866,6 @@ async function startRec(e) {
     document.getElementById('recTimer').textContent = rem.toFixed(1)+' 秒';
     document.getElementById('recBarFill').style.width = (elapsed/totalMs*100)+'%';
     if (elapsed >= totalMs) {
-      // 达到最大时间自动停止
       stopRec();
     }
   }, TICK);
@@ -849,7 +881,7 @@ function stopRec(e) {
   document.getElementById('analyzing').className = 'analyzing show';
   const btnRec = document.getElementById('btnRec');
   btnRec.disabled = true;
-  btnRec.textContent = '🎙 按住录制';
+  btnRec.textContent = '🎙 点击录制';
 }
 
 function doSkip() {
@@ -858,15 +890,18 @@ function doSkip() {
 }
 
 /* ═══════════════════════════════════════════
-   ★ 改进的打分算法 v3 ★
+   ★ 打分算法 v4 ★
    
-   策略：把玩家录音和鸟叫音频的特征做对比
-   1. 无声 → 5-15分
-   2. 和鸟叫的节奏波动相似度（桶向量余弦相似度）
-   3. 响度变化量（std）与鸟叫std的接近程度
-   4. 发声节拍数（ZCR proxy）接近程度
-   5. 发声占比（duty cycle）
-   随机加成仅 ±6，避免乱叫拿高分
+   v3 的问题：BIRD_FEATURES buckets 数值集中在 0.87~1.0，
+   向量几乎平坦，余弦相似度对任何发声都高（0.97+），
+   导致乱哼也能拿 50~70 分。
+
+   v4 改进：
+   1. 对 buckets 做「去均值」再算余弦（中心化余弦），
+      让真正的节奏起伏才能得高分
+   2. 加入「间歇性检测」：有无明显停顿断句，符合鸟叫特征
+   3. 缩紧随机噪声到 ±4，避免运气拉高分数
+   4. 惩罚「平坦发声」：std 太低说明一直哼着，不像鸟叫
 ═══════════════════════════════════════════ */
 function analyzeAndScore() {
   const birdId = G.currentBird.id;
@@ -882,10 +917,9 @@ function analyzeAndScore() {
         const sr   = buf.sampleRate;
         const n    = data.length;
 
-        // —— 1. 全段RMS ——
+        // —— 1. 全段RMS，过低判静音 ——
         let s2=0; for(let i=0;i<n;i++) s2+=data[i]*data[i];
         const rms = Math.sqrt(s2/n);
-
         if (rms < 0.006) {
           ctx.close();
           showScore(5+Math.floor(Math.random()*10),'silent',pickOne(CMTS.silent));
@@ -912,51 +946,64 @@ function analyzeAndScore() {
           userBuckets.push(ch.length? ch.reduce((a,b)=>a+b,0)/ch.length : 0);
         }
 
-        // —— 3. 余弦相似度（节奏轮廓匹配） ——
+        // —— 3. 中心化余弦相似度（去均值，解决近平坦向量问题）——
         const refB = ref.buckets;
+        const uMean = userBuckets.reduce((a,b)=>a+b,0)/20;
+        const rMean = refB.reduce((a,b)=>a+b,0)/20;
+        const uC = userBuckets.map(v=>v-uMean);
+        const rC = refB.map(v=>v-rMean);
         let dot=0,nu=0,nr=0;
         for(let i=0;i<20;i++){
-          dot+=userBuckets[i]*refB[i];
-          nu+=userBuckets[i]*userBuckets[i];
-          nr+=refB[i]*refB[i];
+          dot+=uC[i]*rC[i]; nu+=uC[i]*uC[i]; nr+=rC[i]*rC[i];
         }
-        const cosine = dot/(Math.sqrt(nu)*Math.sqrt(nr)+1e-9); // 0~1
+        // 如果用户向量几乎全平（std极小），中心化后norm→0，直接判低分
+        const cosine = (Math.sqrt(nu)<1e-4 || Math.sqrt(nr)<1e-4)
+          ? 0
+          : Math.max(0, dot/(Math.sqrt(nu)*Math.sqrt(nr)+1e-9));
 
-        // —— 4. 响度方差接近度 ——
+        // —— 4. 响度起伏量（用户自身的std），太平则扣分 ——
         const uAvg = userBuckets.reduce((a,b)=>a+b,0)/20;
         const uStd = Math.sqrt(userBuckets.reduce((s,v)=>s+(v-uAvg)**2,0)/20);
-        // 和参考std比较：越接近越好，差距越大越低分
-        const stdRatio = Math.min(uStd,ref.std)/Math.max(uStd,ref.std+1e-9);
-        // 但如果std太低（太平），也扣分
-        const varScore = uStd > 0.03 ? Math.min(1, uStd/ref.std) : uStd/0.03;
+        // 参考std约为0.02~0.03，用户std应达到一定水平才能得分
+        // 低于 0.04 说明发声很平，不像鸟叫（一直哼）
+        const varScore = Math.min(1, uStd / 0.08);
 
-        // —— 5. 过零率接近程度 ——
+        // —— 5. 间歇性检测：鸟叫有节拍感，要有高低交替 ——
+        // 统计"过静音阈值"的帧数切换次数（安静→发声 的跳变次数）
+        const THR = 0.08;
+        let transitions = 0;
+        let prevActive = normF[0] > THR;
+        for(let i=1;i<normF.length;i++){
+          const active = normF[i] > THR;
+          if (active && !prevActive) transitions++;
+          prevActive = active;
+        }
+        // 参考鸟叫一般有2~8次节拍切换（5秒内）
+        const refTransitions = ref.duty < 0.8 ? 3 : 2; // 有停顿的鸟更多
+        const transScore = Math.min(1, transitions / Math.max(refTransitions, 2));
+
+        // —— 6. 过零率接近程度（音调粗略参考）——
         let zc=0; for(let i=1;i<n;i++) if((data[i]>=0)!==(data[i-1]>=0)) zc++;
         const userZcr = zc/n;
-        const zcrRef  = ref.zcr * 0.12; // 把MP3分析的zcr proxy映射回音频ZCR范围
+        const zcrRef  = ref.zcr * 0.12;
         const zcrScore = Math.min(1, userZcr>0 ? Math.min(userZcr,zcrRef)/Math.max(userZcr,zcrRef+1e-9) : 0);
 
-        // —— 6. 发声占比 ——
-        const THR = 0.05;
-        const duty = frameRMS.filter(v=>v>THR*maxF).length/fCnt;
-        const dutyScore = Math.min(1, duty/0.5);
+        // —— 合成（中心化余弦权重提高，平坦度和间歇性加重惩罚）——
+        const composite = cosine     * 0.40   // 节奏轮廓匹配（中心化后有区分度）
+                        + varScore   * 0.25   // 起伏丰富度
+                        + transScore * 0.20   // 有节拍感/停顿
+                        + zcrScore   * 0.15;  // 音调粗略匹配
 
-        // —— 合成 ——
-        const composite = cosine * 0.35
-                        + varScore * 0.30
-                        + zcrScore * 0.20
-                        + dutyScore * 0.15;
-
-        // 区间：10~92，随机±6
-        const base  = Math.round(10 + composite * 80);
-        const noise = Math.round((Math.random()-.5)*12);
-        const score = Math.max(10, Math.min(92, base+noise));
+        // 区间：8~90，随机±4（缩紧噪声避免运气拉高）
+        const base  = Math.round(8 + composite * 80);
+        const noise = Math.round((Math.random()-.5)*8);
+        const score = Math.max(8, Math.min(90, base+noise));
 
         ctx.close();
         showScore(score,'normal',pickOne(CMTS[score>=82?'excellent':score>=65?'good':score>=42?'mid':'low']));
 
       }).catch(()=>{
-        const s = 25+Math.floor(Math.random()*20);
+        const s = 20+Math.floor(Math.random()*15);
         showScore(s,'normal',pickOne(CMTS.mid));
       });
     };
