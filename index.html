@@ -189,14 +189,14 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
 .call-badge { display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,#ffd166,var(--orange)); color:#fff; border-radius:10px; padding:4px 10px; font-size:13px; font-weight:600; margin-top:3px; align-self:flex-start; }
 
 /* 音频播放器 */
-.audio-player { width:100%; background:linear-gradient(135deg,var(--green-pale),#b7e4c7); border-radius:16px; padding:12px 16px; flex-shrink:0; }
+.audio-player { width:100%; background:linear-gradient(135deg,var(--green-pale),#b7e4c7); border-radius:16px; padding:12px 16px; flex-shrink:0; min-height:110px; box-sizing:border-box; }
 .audio-title { font-size:14px; font-weight:700; color:var(--green); margin-bottom:8px; text-align:center; }
-.wave-bars { display:flex; align-items:center; justify-content:center; gap:4px; height:28px; margin-bottom:10px; }
+.wave-bars { display:flex; align-items:center; justify-content:center; gap:4px; height:28px; min-height:28px; margin-bottom:10px; }
 .wave-bar { width:5px; border-radius:3px; background:var(--green); }
 .wave-bar.playing { animation:wave-anim .55s ease-in-out infinite alternate; }
 @keyframes wave-anim { from{height:4px;opacity:.3} to{height:var(--h,26px);opacity:1} }
 .audio-btns { display:flex; gap:10px; justify-content:center; }
-.audio-note { font-size:11px; color:var(--gray); text-align:center; margin-top:6px; }
+.audio-note { font-size:11px; color:var(--gray); text-align:center; margin-top:6px; min-height:16px; }
 .audio-note a { color:var(--sky-dark); }
 
 /* ════════════════════════════════════════
@@ -413,7 +413,6 @@ body { font-family: 'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
     <div class="wave-bars" id="waveBars"></div>
     <div class="audio-btns">
       <button class="btn btn-secondary" id="btnPlay" onclick="playCall()">▶ 播放叫声</button>
-      <button class="btn btn-secondary" id="btnReplay" onclick="playCall()" disabled style="display:none">🔁 再次播放</button>
     </div>
     <div class="audio-note" id="audioNote"></div>
   </div>
@@ -709,7 +708,7 @@ function showScreen(id) {
   if (id === 'screen-draw') {
     setTimeout(()=>{
       const btn = document.getElementById('btnPlay');
-      if (btn && !btn.disabled && btn.style.display !== 'none') btn.classList.add('btn-pulse');
+      if (btn && !btn.disabled) btn.classList.add('btn-pulse');
     }, 200);
   } else if (id === 'screen-score') {
     setTimeout(()=>{
@@ -756,9 +755,10 @@ function setupRound() {
   document.getElementById('btnGoRec').disabled = true;
   document.getElementById('audioNote').textContent = '';
   // 重置播放按钮
-  document.getElementById('btnPlay').style.display = '';
-  document.getElementById('btnPlay').disabled = false;
-  document.getElementById('btnReplay').style.display = 'none';
+  const btnPlay = document.getElementById('btnPlay');
+  btnPlay.disabled = false;
+  btnPlay.textContent = '▶ 播放叫声';
+  btnPlay.classList.remove('btn-pulse');
   stopCall();
   showScreen('screen-draw');
 }
@@ -771,21 +771,25 @@ function playCall() {
   const audio = new Audio(G.currentBird.audio);
   G.audio = audio;
   audio.loop = false;
+
+  const btn = document.getElementById('btnPlay');
+  btn.disabled = true;
+  btn.textContent = '▶ 播放中…';
+  btn.classList.remove('btn-pulse');
+
   audio.play().then(()=>{
     waveOn();
-    document.getElementById('btnPlay').classList.remove('btn-pulse');
-    document.getElementById('btnPlay').style.display = 'none';
-    document.getElementById('btnReplay').style.display = 'none';
     document.getElementById('btnGoRec').disabled = false;
   }).catch(e=>{
+    btn.disabled = false;
+    btn.textContent = '▶ 播放叫声';
     document.getElementById('audioNote').innerHTML='⚠️ 音频加载失败，请检查本地服务器。';
     document.getElementById('btnGoRec').disabled=false;
   });
   audio.onended = () => {
     waveOff();
-    document.getElementById('btnPlay').style.display = 'none';
-    document.getElementById('btnReplay').style.display = '';
-    document.getElementById('btnReplay').disabled = false;
+    btn.disabled = false;
+    btn.textContent = '🔁 再次播放';
     // 播放结束，高亮「开始模仿」引导用户
     const goBtn = document.getElementById('btnGoRec');
     goBtn.disabled = false;
@@ -793,8 +797,8 @@ function playCall() {
   };
   audio.onerror = () => {
     waveOff();
-    document.getElementById('btnPlay').style.display = '';
-    document.getElementById('btnReplay').style.display = 'none';
+    btn.disabled = false;
+    btn.textContent = '▶ 播放叫声';
     document.getElementById('btnGoRec').disabled = false;
     document.getElementById('audioNote').textContent='⚠️ 音频播放失败';
   };
